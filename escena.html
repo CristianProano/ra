@@ -32,17 +32,33 @@
             border: none;
             border-radius: 5px;
             cursor: pointer;
-            z-index: 9999; /* Asegura que el botón esté por encima de otros elementos */
-            transition: background-color 0.3s, transform 0.3s; /* Transición suave */
+            z-index: 9999;
+            transition: background-color 0.3s, transform 0.3s;
         }
 
         #btn-regresar:hover {
             background-color: #e68900;
-            transform: scale(1.1); /* Efecto de aumento al pasar el ratón */
+            transform: scale(1.1);
         }
 
         #btn-regresar:active {
-            transform: scale(1); /* Restablece el tamaño cuando se hace clic */
+            transform: scale(1);
+        }
+
+        /* Estilos de la barra de zoom */
+        #zoom-container {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.6);
+            padding: 10px;
+            border-radius: 10px;
+            z-index: 9999;
+        }
+
+        #zoom-slider {
+            width: 200px;
         }
     </style>
 </head>
@@ -57,6 +73,11 @@
     
     <button id="btn-regresar" onclick="regresar()">⬅ Regresar</button>
     
+    <!-- Contenedor de la barra de zoom -->
+    <div id="zoom-container">
+        <input type="range" id="zoom-slider" min="-110" max="500" step="0.1" value="3">
+    </div>
+
     <!-- Escena de Realidad Aumentada -->
     <a-scene embedded arjs="sourceType:webcam; debugUIEnabled: false; sourceWidth: 1920; sourceHeight: 1080;" id="scene">
         
@@ -78,8 +99,8 @@
             </a-entity>
         </a-marker>
 
-        <!-- Cámara -->
-        <a-entity camera></a-entity>
+        <!-- Cámara con posición inicial en Z = 3 -->
+        <a-entity id="camera" camera position="0 0 3"></a-entity>
     </a-scene>
 
     <script>
@@ -97,34 +118,27 @@
 
             console.log("📌 Modelo seleccionado:", objPath, mtlPath);
 
-            // Asignar las rutas a los assets
-            document.querySelector("#modelo-obj").setAttribute("src", objPath);
-            document.querySelector("#modelo-mtl").setAttribute("src", mtlPath);
+            // Asignar los modelos a los assets
+            document.getElementById("modelo-obj").setAttribute("src", objPath);
+            document.getElementById("modelo-mtl").setAttribute("src", mtlPath);
 
-            // Obtener el marcador y el modelo 3D
-            const marker = document.querySelector("#markerCustom");
-            const model = document.querySelector("#modelo-3d");
-
-            if (!marker) {
-                console.error("❌ ERROR: No se encontró el marcador. Verifica el ID y la configuración.");
-                return;
-            }
-
-            if (!model) {
-                console.error("❌ ERROR: No se encontró el modelo 3D. Verifica el ID y las rutas.");
-                return;
-            }
-
-            // Evento cuando el marcador es detectado
-            marker.addEventListener("markerFound", () => {
-                console.log("✅ ¡Marcador detectado!");
-                model.setAttribute("visible", "true");
+            // Mostrar el modelo cuando se detecte el marcador
+            document.getElementById("markerCustom").addEventListener("markerFound", function () {
+                document.getElementById("modelo-3d").setAttribute("visible", "true");
             });
 
-            // Evento cuando el marcador se pierde
-            marker.addEventListener("markerLost", () => {
-                console.log("🔴 Marcador perdido");
-                model.setAttribute("visible", "false");
+            document.getElementById("markerCustom").addEventListener("markerLost", function () {
+                document.getElementById("modelo-3d").setAttribute("visible", "false");
+            });
+
+            // Control de zoom
+            const zoomSlider = document.getElementById("zoom-slider");
+            const camera = document.getElementById("camera");
+
+            zoomSlider.addEventListener("input", function () {
+                const zoomValue = zoomSlider.value;
+                camera.setAttribute("position", `0 0 ${zoomValue}`);
+                console.log("🔍 Zoom:", zoomValue);
             });
         });
     </script>
